@@ -215,7 +215,7 @@ def splitCondition(cond):
     return colName, op, value
 
 # Filter rows for a column, operator and value
-def selectAllFromTableCond(data, header, colName, op, value):
+def filterRowsByCond(data, header, colName, op, value):
     index = header.index(colName)
 
     returnData = []
@@ -244,6 +244,7 @@ def filterRowsJoinCond(data, header, col1, col2):
     
     return returnData        
 
+# Deletes a particular column from list of Lists 
 def deleteColumnFrom2DList(data, colIndex):
     for row in data:
         try :
@@ -292,7 +293,7 @@ def prepareCartesianProduct(tableName1, tableName2):
             catesianProd.append(newRow)
     return newHeader, catesianProd
 
-def checkColumnValidityMultiple(col, table1, table2):
+def checkColumnValidity(col, table1, table2):
     print("")
     err = None
     if (col.startswith(table1+".") == False) and (col.startswith(table2+".") == False):
@@ -322,6 +323,31 @@ def performUnion(data1, data2):
         if (row in data1) == False:
             data1.append(row)
     return data1        
+
+def validateCondOnJoinedTables(data, header, col, op, value, table1, table2):
+    err, col = checkColumnValidity(col, table1, table2)
+    if err != None:
+        print(err)
+        quit()
+    try:
+        value = int(value)
+        tempData = filterRowsByCond(data, header, col, op, value)
+    except ValueError:
+        # Checking if the value is also a column for join condition
+        err, col2 = checkColumnValidity(value, table1, table2)
+        if err != None:
+            print(err)
+            quit()
+        tempData = filterRowsJoinCond(data, header, col, col2)
+    return tempData    
+
+def validateSingleTableCond(data, header, col, op, value):
+    if (col in header) == False:
+        print("Column '", col ,"' does not belong to table..")
+        quit()
+    value = int(value)    
+    tempData = filterRowsByCond(data, header, col, op, value)
+    return tempData
 
 
 def parseSQL(sql):
@@ -372,72 +398,44 @@ def parseSQL(sql):
     else:   # comaCount == 1        
         comaIndex = tables.index(',')
         table1 = tables[:comaIndex]
+        table1 = table1.strip()
         if (table1 in headerDict) == False:
             print("Error: Table : '",table1, "' does not exist..")
             quit()
-        table1 = table1.strip() 
+         
         table2 = tables[comaIndex+1:]
+        table2 = table2.strip()
         if (table1 in headerDict) == False:
             print("Error: Table : '",table1, "' does not exist..")
             quit()
-        table2 = table2.strip()
         header, data = prepareCartesianProduct(table1, table2)
     
     # Processing where clause/s
     if whereIndex != -1:
         # processWhere(sql, data, header)
         clause = sql[whereIndex+len(" where "):]
+        
         if clause.find(" or ") != -1:
             orIndex = clause.index(" or ") 
             cond1 = clause[:orIndex]
             cond1 = cond1.strip()
             cond2 = clause[orIndex+len(" or "):]
             cond2 = cond2.strip()
+            
             # Checking first condition
             col, op, value = splitCondition(cond1)
             if comaCount == 1:
-                err, col = checkColumnValidityMultiple(col, table1, table2)
-                if err != None:
-                    print(err)
-                    quit()
-                try:
-                    value = int(value)
-                    data1 = selectAllFromTableCond(data, header, col, op, value)
-                except ValueError:
-                    # Checking if the value is also a column for join condition
-                    err, col2 = checkColumnValidityMultiple(value, table1, table2)
-                    if err != None:
-                        print(err)
-                        quit()
-                    data1 = filterRowsJoinCond(data, header, col, col2)
+                data1 = validateCondOnJoinedTables(data, header, col, op, value, table1, table2)
             elif comaCount == 0:
-                # err, col = checkColumnValiditySingle(col, table1)
-                if (col in header) == False:
-                    print("Column '", col ,"' does not belong to table..")
-                    quit()
-                data1 = selectAllFromTableCond(data, header, col, op, value) 
+                data1 = validateSingleTableCond(data, header, col, op, value)
+                
             # Checking second condition
             col, op, value = splitCondition(cond2)
             if comaCount == 1:
-                err, col = checkColumnValidityMultiple(col, table1, table2)
-                if err != None:
-                    print(err)
-                    quit()
-                try:
-                    value = int(value)
-                    data2 = selectAllFromTableCond(data, header, col, op, value)
-                except ValueError:
-                    # Checking if the value is also a column for join condition
-                    err, col2 = checkColumnValidityMultiple(value, table1, table2)
-                    if err != None:
-                        print(err)
-                        quit()
-                    data2 = filterRowsJoinCond(data, header, col, col2)
+                data2 = validateCondOnJoinedTables(data, header, col, op, value, table1, table2) 
             elif comaCount == 0:
-                if (col in header) == False:
-                    print("Column '", col ,"' does not belong to table..")
-                    quit()
-                data2 = selectAllFromTableCond(data, header, col, op, value)
+                data2 = validateSingleTableCond(data, header, col, op, value)
+                
             # Performing union due to OR condition
             data = performUnion(data1, data2)
         
@@ -447,53 +445,23 @@ def parseSQL(sql):
             cond1 = cond1.strip()
             cond2 = clause[andIndex+len(" and "):]
             cond2 = cond2.strip()
+
             # Checking first condition
             col, op, value = splitCondition(cond1)
             if comaCount == 1:
-                err, col = checkColumnValidityMultiple(col, table1, table2)
-                if err != None:
-                    print(err)
-                    quit()
-                try:
-                    value = int(value)
-                    data = selectAllFromTableCond(data, header, col, op, value)
-                except ValueError:
-                    # Checking if the value is also a column for join condition
-                    err, col2 = checkColumnValidityMultiple(value, table1, table2)
-                    if err != None:
-                        print(err)
-                        quit()
-                    data = filterRowsJoinCond(data, header, col, col2)
+                data = validateCondOnJoinedTables(data, header, col, op, value, table1, table2)
             elif comaCount == 0:
-                if (col in header) == False:
-                    print("Column '", col ,"' does not belong to table..")
-                    quit()
-                data = selectAllFromTableCond(data, header, col, op, value) 
+                data = validateSingleTableCond(data, header, col, op, value)
+                
             # Checking second condition
             col, op, value = splitCondition(cond2)
             if comaCount == 1:
-                err, col = checkColumnValidityMultiple(col, table1, table2)
-                if err != None:
-                    print(err)
-                    quit()
-                try:
-                    value = int(value)
-                    data = selectAllFromTableCond(data, header, col, op, value)
-                except ValueError:
-                    # Checking if the value is also a column for join condition
-                    err, col2 = checkColumnValidityMultiple(value, table1, table2)
-                    if err != None:
-                        print(err)
-                        quit()
-                    data = filterRowsJoinCond(data, header, col, col2)
+                data = validateCondOnJoinedTables(data, header, col, op, value, table1, table2)
             elif comaCount == 0:
-                if (col in header) == False:
-                    print("Column '", col ,"' does not belong to table..")
-                    quit()
-                data = selectAllFromTableCond(data, header, col, op, value)
+                data = validateSingleTableCond(data, header, col, op, value)
             
             # No need to perform intersection as already passing filtered data based on first condition
-            data = selectAllFromTableCond(data, header, col, op, value)       
+            # data = filterRowsByCond(data, header, col, op, value)       
         
         # Single condition
         else:
@@ -501,25 +469,9 @@ def parseSQL(sql):
             cond = cond.strip()
             col, op, value = splitCondition(cond)
             if comaCount == 1:
-                err, col = checkColumnValidityMultiple(col, table1, table2)
-                if err != None:
-                    print(err)
-                    quit()
-                try:
-                    value = int(value)
-                    data = selectAllFromTableCond(data, header, col, op, value)
-                except ValueError:
-                    # Checking if the value is also a column for join condition
-                    err, col2 = checkColumnValidityMultiple(value, table1, table2)
-                    if err != None:
-                        print(err)
-                        quit()
-                    data = filterRowsJoinCond(data, header, col, col2)
+                data = validateCondOnJoinedTables(data, header, col, op, value, table1, table2)
             elif comaCount == 0:
-                if (col in header) == False:
-                    print("Column '", col ,"' does not belong to table..")
-                    quit()
-                data = selectAllFromTableCond(data, header, col, op, value)
+                data = validateSingleTableCond(data, header, col, op, value)
     # Processing of where clause completed here
     
     # Projecting columns on above filtered data
@@ -541,7 +493,7 @@ def parseSQL(sql):
                     print("Column '", col ,"' does not belong to table..")
                     quit()
             elif comaCount == 1:
-                err, col = checkColumnValidityMultiple(col, table1, table2)
+                err, col = checkColumnValidity(col, table1, table2)
                 if err != None:
                     print(err)
                     quit()
@@ -554,7 +506,7 @@ def parseSQL(sql):
                     print("Column '", col ,"' does not belong to table..")
                     quit()
             elif comaCount == 1:
-                err, col = checkColumnValidityMultiple(col, table1, table2)
+                err, col = checkColumnValidity(col, table1, table2)
                 if err != None:
                     print(err)
                     quit()
@@ -567,7 +519,7 @@ def parseSQL(sql):
                     print("Column '", col ,"' does not belong to table..")
                     quit()
             elif comaCount == 1:
-                err, col = checkColumnValidityMultiple(col, table1, table2)
+                err, col = checkColumnValidity(col, table1, table2)
                 if err != None:
                     print(err)
                     quit()
@@ -580,7 +532,7 @@ def parseSQL(sql):
                     print("Column '", col ,"' does not belong to table..")
                     quit()
             elif comaCount == 1:
-                err, col = checkColumnValidityMultiple(col, table1, table2)
+                err, col = checkColumnValidity(col, table1, table2)
                 if err != None:
                     print(err)
                     quit()
@@ -588,10 +540,10 @@ def parseSQL(sql):
     
     else:
         # Projecting columns
-        distinctFlag = False
-        if toSelect.startswith("distinct "):
-            distinctFlag = True
-            toSelect = toSelect[len("distinct "):]
+        # distinctFlag = False
+        # if toSelect.startswith("distinct "):
+        #     distinctFlag = True
+        #     toSelect = toSelect[len("distinct "):]
         # print("toselect is:", toSelect)
         columns = toSelect.split(",")
         colToIterate = []
@@ -607,7 +559,7 @@ def parseSQL(sql):
                 else:
                     colToIterate.append(col)
             elif comaCount == 1:
-                err, col = checkColumnValidityMultiple(col, table1, table2)
+                err, col = checkColumnValidity(col, table1, table2)
                 if err != None:
                     print(err)
                     flag = True

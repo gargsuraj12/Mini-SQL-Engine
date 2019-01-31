@@ -60,8 +60,12 @@ def prepareHeaderDict(fileName):
 
 def readFileIn2DList(fileName):
     tableData = []
+    s = "\""
     with open(fileName) as f:
         for line in f:
+            # Removing the double quotes if occurs
+            if s in line:
+                line = line.replace(s, '')
             if(line[-1] == '\n'):
                 line = line[:-1]
             row = line.split(',')
@@ -267,21 +271,6 @@ def prepareCartesianProduct(tableName1, tableName2):
 
     for col in header2:
         newHeader.append(tableName2 + "." + col)
-        
-    # i = 0
-    # while True:
-    #     if i >= len(header2):
-    #         break
-    #     col = header2[i]
-    #     if (col in header1):
-    #         del header2[i]
-    #         tableData2 = deleteColumnFrom2DList(tableData2, i)
-    #         continue
-    #     else:
-    #         newHeader.append(tableName2 + "." + col)
-    #         i += 1
-
-    # print(*newHeader, sep="\t")
     
     catesianProd = []
 
@@ -540,11 +529,6 @@ def parseSQL(sql):
     
     else:
         # Projecting columns
-        # distinctFlag = False
-        # if toSelect.startswith("distinct "):
-        #     distinctFlag = True
-        #     toSelect = toSelect[len("distinct "):]
-        # print("toselect is:", toSelect)
         columns = toSelect.split(",")
         colToIterate = []
         flag = False
@@ -575,8 +559,10 @@ def parseSQL(sql):
             else:    
                 projectColumns(colToIterate, data, header)
 
-if __name__ == '__main__':
+if __name__ == '__main__':    
     prepareHeaderDict('metadata.txt')
     sql = str(sys.argv[1])
-    # print(sql)
-    parseSQL(sql)
+    if sql == None or sql == '':
+        print("No SQL query provided as arguement..")
+    else:    
+        parseSQL(sql)

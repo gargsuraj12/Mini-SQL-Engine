@@ -1,14 +1,46 @@
+Positive Testing:--
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 python3 2018202003.py "Select table1.A,D from table1,table2 where table1.A = 640 and D > 11191;"
 python3 2018202003.py "Select table1.A,D from table1,table2 where table1.A = 640 or D > 11191;"
-python3 2018202003.py "Select max(table1.A),min(D) from table1,table2 where table1.A = 640 or D > 11191;"
-python3 2018202003.py "Select max(table1.A),min(D) from table1,table2 where table1.A = 640 or D > 11191;"
 python3 2018202003.py "Select * from table1,table2 where table1.A = 640 or D > 11191;"
-python3 2018202003.py "Select max(table1.A),min(D),sum(D),avg(D),count(D) from table1,table2 where table1.A = 640 or D > 11191;"
 python3 2018202003.py "Select * from table1,table2 where table1.A = 640 or C > 11191;"
-python3 2018202003.py "Select max(table1.A),min(D),sum(D),avg(D),count(D) from table1,table2 where table1.A = 640 or C > 11191;"
 python3 2018202003.py "Select * from table1,table2;"
 python3 2018202003.py "Select * from table1,table2 where table1.A=table2.B;"
 python3 2018202003.py "Select distinct * from table1,table2 where table1.A=table2.B;"
 python3 2018202003.py "Select table1.A,table1.B,table1.C from table1,table2 where table1.B=table2.B;"
 python3 2018202003.py "Select distinct table1.A,table1.B,table1.C from table1,table2 where table1.B=table2.B;"
 python3 2018202003.py "Select distinct * from table1,table2 where table1.B=table2.B;"
+python3 2018202003.py "Select distinct A,C from table1;"
+python3 2018202003.py "Select sum(A) from table1;"
+python3 2018202003.py "Select sum(A) from table1 where a>10;"
+python3 2018202003.py "Select sum(A) from table1 where a>10 and b>=0;"
+
+
+Negative Testing:--
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+python3 2018202003.py "Select * from table1 , table2;"
+python3 2018202003.py "Seslect * from table1,table2;"
+python3 2018202003.py "Select *  table1,table2;"
+python3 2018202003.py "Select * from table1,table2 where;"  ---------->failed
+python3 2018202003.py "Select * ; from table1,table2;"
+python3 2018202003.py "Select * from table1,table2"
+python3 2018202003.py "Select * , from table1,table2;"
+python3 2018202003.py "Select Z from table1,table2;"
+python3 2018202003.py "Select * from table1, ,table2;"
+python3 2018202003.py "Select * from tableuu1,table2;"
+python3 2018202003.py "Select * from table1table2;"
+python3 2018202003.py "Select * from table1  table2;"
+python3 2018202003.py "Select sum(A) from table1 whsere a>10 and b>=0;"
+python3 2018202003.py "Select sum(A) from table1 where aa>10 and b>=0;"
+python3 2018202003.py "Select sum(A) from table1 where a>10 andd b>=0;"
+python3 2018202003.py "Select sum(A,B) from table1 where a>10 and b>=0;"
+
+
+
+
+Out of Scope:--
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+python3 2018202003.py "Select max(table1.A),min(D),sum(D),avg(D),count(D) from table1,table2 where table1.A = 640 or C > 11191;"
+python3 2018202003.py "Select max(table1.A),min(D),sum(D),avg(D),count(D) from table1,table2 where table1.A = 640 or D > 11191;"
+python3 2018202003.py "Select max(table1.A),min(D) from table1,table2 where table1.A = 640 or D > 11191;"
+python3 2018202003.py "Select max(table1.A),min(D) from table1,table2 where table1.A = 640 or D > 11191;"

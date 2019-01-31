@@ -9,7 +9,8 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "args": ["Select A from table1 where A = 640 or C < 1119;"]
         },
         {
             "name": "Python: Attach",
